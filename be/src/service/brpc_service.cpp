@@ -24,12 +24,6 @@
 #include "service/internal_service.h"
 
 
-namespace brpc {
-
-DECLARE_uint64(max_body_size);
-
-}
-
 namespace doris {
 
 BRpcService::BRpcService(ExecEnv* exec_env)

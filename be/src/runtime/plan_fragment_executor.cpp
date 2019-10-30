@@ -74,7 +74,18 @@ Status PlanFragmentExecutor::prepare(const TExecPlanFragmentParams& request) {
     LOG(INFO) << "Prepare(): query_id=" << print_id(_query_id)
                << " fragment_instance_id=" << print_id(params.fragment_instance_id)
                << " backend_num=" << request.backend_num;
-    // VLOG(2) << "request:\n" << apache::thrift::ThriftDebugString(request);
+
+    VLOG(2) << "request:\n" << apache::thrift::ThriftDebugString(request.fragment);
+    VLOG(2) << "request:\n" << apache::thrift::ThriftDebugString(request.desc_tbl);
+    for (const TSlotDescriptor slotDescriptor : request.desc_tbl.slotDescriptors) {
+        VLOG(2) << "slotDescriptor:\n" << apache::thrift::ThriftDebugString(slotDescriptor);
+    }
+    for (const TTupleDescriptor tupleDescriptor : request.desc_tbl.tupleDescriptors) {
+        VLOG(2) << "tupleDescriptor:\n" << apache::thrift::ThriftDebugString(tupleDescriptor);
+    }
+    for (const TTableDescriptor tableDescriptor : request.desc_tbl.tableDescriptors) {
+        VLOG(2) << "tableDescriptors:\n" << apache::thrift::ThriftDebugString(tableDescriptor);
+    }
 
     _runtime_state.reset(new RuntimeState(
             request, request.query_options, request.query_globals, _exec_env));

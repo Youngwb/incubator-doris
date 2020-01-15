@@ -218,6 +218,10 @@
                                     <pattern>org.apache.arrow</pattern>
                                     <shadedPattern>org.shaded.arrow</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>io.netty</pattern>
+                                    <shadedPattern>org.apache.doris.netty</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>

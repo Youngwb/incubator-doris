@@ -993,10 +993,29 @@ public class OlapTable extends Table {
             LOG.warn("failed to copy olap table: " + getName());
             return null;
         }
-        
+
+        // remove shadow index from copied table
+        Map<Long, MaterializedIndexMeta> visibleIndex =  copied.getVisibleIndexIdToMeta();
+        Map<Long, String> shadowIndex = Maps.newHashMap();
+        for (Map.Entry<String, Long> entry : copied.getIndexNameToId().entrySet()) {
+            if (!visibleIndex.containsKey(entry.getValue())) {
+                shadowIndex.put(entry.getValue(), entry.getKey());
+            }
+        }
+
+        for (String index : shadowIndex.values()) {
+            LOG.debug("delete shadow index : {}", index);
+            copied.deleteIndexInfo(index);
+        }
+
         if (resetState) {
             copied.setState(OlapTableState.NORMAL);
             for (Partition partition : copied.getPartitions()) {
+                // remove shadow index from partition
+                for (Long deleteIndex : shadowIndex.keySet()) {
+                    LOG.debug("partition delete shadow index : {}", deleteIndex);
+                    partition.deleteRollupIndex(deleteIndex);
+                }
                 partition.setState(PartitionState.NORMAL);
                 copied.getPartitionInfo().setDataProperty(partition.getId(), new DataProperty(TStorageMedium.HDD));
                 for (MaterializedIndex idx : partition.getMaterializedIndices(extState)) {

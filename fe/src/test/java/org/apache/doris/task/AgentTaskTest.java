@@ -113,7 +113,7 @@ public class AgentTaskTest {
                                                   indexId1, tabletId1, shortKeyNum, schemaHash1,
                                                   version, versionHash, KeysType.AGG_KEYS,
                                                   storageType, TStorageMedium.SSD,
-                                                  columns, null, 0, latch, null,
+                                                  columns, null, 0, null, latch, null,
                                                   false, TTabletType.TABLET_TYPE_DISK);
 
         // drop

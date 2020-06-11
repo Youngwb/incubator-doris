@@ -86,6 +86,9 @@ private:
     std::string _referenced_column;
 
     bool _has_bitmap_index = false;
+
+    bool _has_dependence_column = false;
+    std::string _dependence_column;
 };
 
 bool operator==(const TabletColumn& a, const TabletColumn& b);

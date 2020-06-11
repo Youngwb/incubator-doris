@@ -301,6 +301,11 @@ void TabletColumn::init_from_pb(const ColumnPB& column) {
     } else {
         _has_bitmap_index = false;
     }
+
+    _has_dependence_column = column.has_dependence_column();
+    if (_has_dependence_column) {
+        _dependence_column = column.dependence_column();
+    }
     _has_referenced_column = column.has_referenced_column_id();
     if (_has_referenced_column) {
         _referenced_column_id = column.referenced_column_id();
@@ -334,6 +339,9 @@ void TabletColumn::to_schema_pb(ColumnPB* column) {
     }
     if (_has_bitmap_index) {
         column->set_has_bitmap_index(_has_bitmap_index);
+    }
+    if (_has_dependence_column) {
+        column->set_dependence_column(_dependence_column);
     }
 }
 

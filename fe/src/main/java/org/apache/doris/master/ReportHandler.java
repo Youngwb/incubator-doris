@@ -581,7 +581,8 @@ public class ReportHandler extends Daemon {
                                             indexMeta.getSchemaHash(), partition.getVisibleVersion(),
                                             partition.getVisibleVersionHash(), indexMeta.getKeysType(),
                                             TStorageType.COLUMN,
-                                            TStorageMedium.HDD, indexMeta.getSchema(), bfColumns, bfFpp, null,
+                                            TStorageMedium.HDD, indexMeta.getSchema(), bfColumns, bfFpp,
+                                            olapTable.getReplaceVersionColumn(), null,
                                             olapTable.getCopiedIndexes(),
                                             olapTable.isInMemory(),
                                             olapTable.getPartitionInfo().getTabletType(partitionId));

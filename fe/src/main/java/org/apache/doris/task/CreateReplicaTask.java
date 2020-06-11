@@ -18,6 +18,7 @@
 package org.apache.doris.task;
 
 import org.apache.doris.alter.SchemaChangeHandler;
+import org.apache.doris.catalog.AggregateType;
 import org.apache.doris.catalog.Column;
 import org.apache.doris.catalog.Index;
 import org.apache.doris.catalog.KeysType;
@@ -61,6 +62,8 @@ public class CreateReplicaTask extends AgentTask {
     private Set<String> bfColumns;
     private double bfFpp;
 
+    // replace version column
+    private String replaceVersionColumn;
     // indexes
     private List<Index> indexes;
 
@@ -83,7 +86,8 @@ public class CreateReplicaTask extends AgentTask {
                              short shortKeyColumnCount, int schemaHash, long version, long versionHash,
                              KeysType keysType, TStorageType storageType,
                              TStorageMedium storageMedium, List<Column> columns,
-                             Set<String> bfColumns, double bfFpp, MarkedCountDownLatch<Long, Long> latch,
+                             Set<String> bfColumns, double bfFpp, String replaceVersionColumn,
+                             MarkedCountDownLatch<Long, Long> latch,
                              List<Index> indexes,
                              boolean isInMemory,
                              TTabletType tabletType) {
@@ -104,6 +108,8 @@ public class CreateReplicaTask extends AgentTask {
         this.bfColumns = bfColumns;
         this.indexes = indexes;
         this.bfFpp = bfFpp;
+
+        this.replaceVersionColumn = replaceVersionColumn;
 
         this.latch = latch;
 
@@ -161,6 +167,10 @@ public class CreateReplicaTask extends AgentTask {
             // is bloom filter column
             if (bfColumns != null && bfColumns.contains(column.getName())) {
                 tColumn.setIs_bloom_filter_column(true);
+            }
+            // set replace version column for value column which AggregateType is REPLACE
+            if (replaceVersionColumn != null && column.getAggregationType() == AggregateType.REPLACE) {
+                tColumn.setDependence_column(replaceVersionColumn);
             }
             // when doing schema change, some modified column has a prefix in name.
             // this prefix is only used in FE, not visible to BE, so we should remove this prefix.

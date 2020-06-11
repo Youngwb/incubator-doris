@@ -779,7 +779,7 @@ public class RestoreJob extends AbstractJob {
                             indexMeta.getSchemaHash(), restoreReplica.getVersion(),
                             restoreReplica.getVersionHash(), indexMeta.getKeysType(), TStorageType.COLUMN,
                             TStorageMedium.HDD /* all restored replicas will be saved to HDD */,
-                            indexMeta.getSchema(), bfColumns, bfFpp, null,
+                            indexMeta.getSchema(), bfColumns, bfFpp, localTbl.getReplaceVersionColumn(),null,
                             localTbl.getCopiedIndexes(),
                             localTbl.isInMemory(),
                             localTbl.getPartitionInfo().getTabletType(restorePart.getId()));

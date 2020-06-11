@@ -2981,7 +2981,6 @@ public class Catalog {
 
         Map<Long, MaterializedIndexMeta> indexIdToMeta;
         Set<String> bfColumns = null;
-
         String partitionName = singlePartitionDesc.getPartitionName();
 
         // check
@@ -3099,6 +3098,7 @@ public class Catalog {
                     singlePartitionDesc.getReplicationNum(),
                     singlePartitionDesc.getVersionInfo(),
                     bfColumns, olapTable.getBfFpp(),
+                    olapTable.getReplaceVersionColumn(),
                     tabletIdSet, olapTable.getCopiedIndexes(),
                     singlePartitionDesc.isInMemory(),
                     olapTable.getStorageFormat(),
@@ -3428,6 +3428,7 @@ public class Catalog {
                                                  Pair<Long, Long> versionInfo,
                                                  Set<String> bfColumns,
                                                  double bfFpp,
+                                                 String replaceVersionColumn,
                                                  Set<Long> tabletIdSet,
                                                  List<Index> indexes,
                                                  boolean isInMemory,
@@ -3494,6 +3495,7 @@ public class Catalog {
                             keysType,
                             storageType, storageMedium,
                             schema, bfColumns, bfFpp,
+                            replaceVersionColumn,
                             countDownLatch,
                             indexes,
                             isInMemory,
@@ -3736,6 +3738,19 @@ public class Catalog {
                     rollupSchemaHash, rollupShortKeyColumnCount, rollupIndexStorageType, keysType);
         }
 
+        // analyze replace version column;
+        String replaceVersionColumn = null;
+        try {
+            boolean isReplaceVersionColumnSet = properties != null && properties.containsKey(PropertyAnalyzer.PROPERTIES_REPLACE_VERSION_COLUMN);
+            if (isReplaceVersionColumnSet) {
+                replaceVersionColumn = PropertyAnalyzer.analyzeReplaceVersionColumn(properties, baseSchema);
+
+                olapTable.setReplaceVersionInfo(replaceVersionColumn);
+            }
+        } catch (AnalysisException e) {
+            throw new DdlException(e.getMessage());
+        }
+
         // analyze version info
         Pair<Long, Long> versionInfo = null;
         try {
@@ -3774,7 +3789,7 @@ public class Catalog {
                         distributionInfo,
                         partitionInfo.getDataProperty(partitionId).getStorageMedium(),
                         partitionInfo.getReplicationNum(partitionId),
-                        versionInfo, bfColumns, bfFpp,
+                        versionInfo, bfColumns, bfFpp, replaceVersionColumn,
                         tabletIdSet, olapTable.getCopiedIndexes(),
                         isInMemory, storageFormat, tabletType);
                 olapTable.addPartition(partition);
@@ -3803,7 +3818,7 @@ public class Catalog {
                             keysType, distributionInfo,
                             dataProperty.getStorageMedium(),
                             partitionInfo.getReplicationNum(entry.getValue()),
-                            versionInfo, bfColumns, bfFpp,
+                            versionInfo, bfColumns, bfFpp, replaceVersionColumn,
                             tabletIdSet, olapTable.getCopiedIndexes(),
                             isInMemory, storageFormat,
                             rangePartitionInfo.getTabletType(entry.getValue()));
@@ -6276,6 +6291,7 @@ public class Catalog {
                         null /* version info */,
                         copiedTbl.getCopiedBfColumns(),
                         copiedTbl.getBfFpp(),
+                        copiedTbl.getReplaceVersionColumn(),
                         tabletIdSet,
                         copiedTbl.getCopiedIndexes(),
                         copiedTbl.isInMemory(),

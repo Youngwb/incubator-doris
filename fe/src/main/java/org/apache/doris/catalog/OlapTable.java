@@ -116,6 +116,9 @@ public class OlapTable extends Table {
     private Set<String> bfColumns;
     private double bfFpp;
 
+    // replace version column
+    private String replaceVersionColumn;
+
     private String colocateGroup;
 
     private TableIndexes indexes;
@@ -162,6 +165,8 @@ public class OlapTable extends Table {
 
         this.bfColumns = null;
         this.bfFpp = 0;
+
+        this.replaceVersionColumn = null;
 
         this.colocateGroup = null;
 
@@ -702,6 +707,10 @@ public class OlapTable extends Table {
         return Sets.newHashSet(bfColumns);
     }
 
+    public String getReplaceVersionColumn() {
+        return replaceVersionColumn;
+    }
+
     public List<Index> getCopiedIndexes() {
         if (indexes == null) {
             return Lists.newArrayList();
@@ -716,6 +725,10 @@ public class OlapTable extends Table {
     public void setBloomFilterInfo(Set<String> bfColumns, double bfFpp) {
         this.bfColumns = bfColumns;
         this.bfFpp = bfFpp;
+    }
+
+    public void setReplaceVersionInfo(String replaceVersionColumn) {
+        this.replaceVersionColumn = replaceVersionColumn;
     }
 
     public void setIndexes(List<Index> indexes) {

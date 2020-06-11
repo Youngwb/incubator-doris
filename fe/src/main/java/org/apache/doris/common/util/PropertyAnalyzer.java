@@ -87,6 +87,8 @@ public class PropertyAnalyzer {
 
     public static final String PROPERTIES_TYPE = "type";
 
+    public static final String PROPERTIES_REPLACE_VERSION_COLUMN = "replace_version_column";
+
     public static DataProperty analyzeDataProperty(Map<String, String> properties, DataProperty oldDataProperty)
             throws AnalysisException {
         if (properties == null) {
@@ -366,6 +368,31 @@ public class PropertyAnalyzer {
         }
 
         return bfFpp;
+    }
+
+    public static String analyzeReplaceVersionColumn(Map<String, String> properties, List<Column> columns)
+            throws AnalysisException {
+        String replaceVersionColumn = null;
+        if (properties != null && properties.containsKey(PROPERTIES_REPLACE_VERSION_COLUMN)) {
+            replaceVersionColumn = properties.get(PROPERTIES_REPLACE_VERSION_COLUMN).trim();
+            boolean found = false;
+            for (Column column : columns) {
+                if (column.getName().equalsIgnoreCase(replaceVersionColumn)) {
+                    if (column.isKey() || column.getAggregationType() !=  AggregateType.REPLACE) {
+                        throw new AnalysisException("Replace version column should be used in value column of "
+                                + "AGG_KEYS table, and aggregate type should be REPLACE");
+                    }
+                    found = true;
+                }
+            }
+
+            if (!found) {
+                throw new AnalysisException("replace version column does not exist in table. invalid column: "
+                        + replaceVersionColumn);
+            }
+        }
+
+        return replaceVersionColumn;
     }
 
     public static String analyzeColocate(Map<String, String> properties) throws AnalysisException {

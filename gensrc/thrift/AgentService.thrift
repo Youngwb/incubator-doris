@@ -34,6 +34,7 @@ struct TColumn {
     6: optional string default_value
     7: optional bool is_bloom_filter_column
     8: optional Exprs.TExpr define_expr
+    9: optional string dependence_column
 }
 
 struct TTabletSchema {

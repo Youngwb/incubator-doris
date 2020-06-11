@@ -169,7 +169,8 @@ public class CreateReplicaTask extends AgentTask {
                 tColumn.setIs_bloom_filter_column(true);
             }
             // set replace version column for value column which AggregateType is REPLACE
-            if (replaceVersionColumn != null && column.getAggregationType() == AggregateType.REPLACE) {
+            if (replaceVersionColumn != null && column.getAggregationType() == AggregateType.REPLACE
+                    && !column.getName().equalsIgnoreCase(replaceVersionColumn)) {
                 tColumn.setDependence_column(replaceVersionColumn);
             }
             // when doing schema change, some modified column has a prefix in name.

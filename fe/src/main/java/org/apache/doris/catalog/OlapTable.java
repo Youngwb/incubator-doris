@@ -728,6 +728,13 @@ public class OlapTable extends Table {
     }
 
     public void setReplaceVersionInfo(String replaceVersionColumn) {
+        for (MaterializedIndexMeta index : indexIdToMeta.values()) {
+            for (Column column : index.getSchema()) {
+                if (column.getName().equalsIgnoreCase(replaceVersionColumn)) {
+                    column.setAggregationType(AggregateType.MAX, false);
+                }
+            }
+        }
         this.replaceVersionColumn = replaceVersionColumn;
     }
 

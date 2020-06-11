@@ -390,6 +390,8 @@ public class PropertyAnalyzer {
                 throw new AnalysisException("replace version column does not exist in table. invalid column: "
                         + replaceVersionColumn);
             }
+
+            properties.remove(PROPERTIES_REPLACE_VERSION_COLUMN);
         }
 
         return replaceVersionColumn;

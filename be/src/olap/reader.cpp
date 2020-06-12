@@ -331,6 +331,19 @@ OLAPStatus Reader::init(const ReaderParams& read_params) {
     DCHECK(_next_row_func != nullptr) << "No next row function for type:"
         << _tablet->keys_type();
 
+    LOG(INFO) << "Reader init Finished.";
+    LOG(INFO) << "return columns : ";
+    for (auto& i : _return_columns) {
+        LOG(INFO) << _tablet->tablet_schema().column(i).name() << ", ";
+    }
+
+    LOG(INFO) << "seek columns : ";
+    for (auto& i : _seek_columns) {
+        LOG(INFO) << _tablet->tablet_schema().column(i).name() << ", ";
+    }
+
+    LOG(INFO) << "key params : " << _keys_param.to_string();
+
     return OLAP_SUCCESS;
 }
 
@@ -355,6 +368,7 @@ OLAPStatus Reader::_agg_key_next_row(RowCursor* row_cursor, MemPool* mem_pool, O
         return OLAP_SUCCESS;
     }
     init_row_with_others(row_cursor, *_next_key, mem_pool, agg_pool);
+    LOG(INFO) << "init with next_key, row_cursor : " << row_cursor->to_string();
     int64_t merged_count = 0;
     do {
         auto res = _collect_iter->next(&_next_key, &_next_delete_flag);
@@ -600,6 +614,28 @@ OLAPStatus Reader::_init_return_columns(const ReaderParams& read_params) {
                 }
             }
         }
+
+        // replace value column has version dependence column
+        bool has_dependence_column = false;
+        int32_t depen_column_index = -1;
+        for (auto id : read_params.return_columns) {
+            if(_tablet->tablet_schema().column(id).has_dependence_column()) {
+                std::string depen_column = _tablet->tablet_schema().column(id).dependence_column();
+                depen_column_index = _tablet->field_index(depen_column);
+                if (depen_column_index < 0) {
+                    std::stringstream ss;
+                    ss << "field name is invalied. field="  << depen_column;
+                    LOG(WARNING) << ss.str();
+                    return OLAP_ERR_READER_INITIALIZED_ERROR;
+                }
+                has_dependence_column = true;
+                break;
+            }
+        }
+        if (has_dependence_column) {
+            _return_columns.push_back(depen_column_index);
+        }
+
         for (auto id : read_params.return_columns) {
             if (_tablet->tablet_schema().column(id).is_key()) {
                 _key_cids.push_back(id);

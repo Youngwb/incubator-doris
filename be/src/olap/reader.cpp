@@ -369,6 +369,7 @@ OLAPStatus Reader::_agg_key_next_row(RowCursor* row_cursor, MemPool* mem_pool, O
     }
     init_row_with_others(row_cursor, *_next_key, mem_pool, agg_pool);
     LOG(INFO) << "init with next_key, row_cursor : " << row_cursor->to_string();
+    LOG(INFO) << "init with next_key, next_key : " << _next_key->to_string();
     int64_t merged_count = 0;
     do {
         auto res = _collect_iter->next(&_next_key, &_next_delete_flag);

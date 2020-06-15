@@ -214,6 +214,8 @@ Status OlapScanner::_init_params(
 }
 
 Status OlapScanner::_init_return_columns() {
+    bool has_dependence_column = false;
+    int32_t dependence_column_index = -1;
     for (auto slot : _tuple_desc->slots()) {
         if (!slot->is_materialized()) {
             continue;
@@ -225,9 +227,24 @@ Status OlapScanner::_init_return_columns() {
             LOG(WARNING) << ss.str();
             return Status::InternalError(ss.str());
         }
+        const TabletColumn& column = _tablet->tablet_schema().column(index);
+        if (column.has_dependence_column()) {
+            has_dependence_column = true;
+            dependence_column_index = _tablet->field_index(column.dependence_column());
+            if (dependence_column_index < 0) {
+                std::stringstream ss;
+                ss << "field name is invalied. field="  << column.dependence_column();
+                LOG(WARNING) << ss.str();
+                return Status::InternalError(ss.str());
+            }
+        }
         _return_columns.push_back(index);
         _query_slots.push_back(slot);
     }
+    if (has_dependence_column && dependence_column_index != -1) {
+        _return_columns.push_back(dependence_column_index);
+    }
+
     if (_return_columns.empty()) {
         return Status::InternalError("failed to build storage scanner, no materialized slot!");
     }

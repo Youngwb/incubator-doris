@@ -168,6 +168,28 @@ void agg_update_row(const std::vector<uint32_t>& cids, DstRowType* dst, const Sr
     }
 }
 
+template<typename DstRowType, typename SrcRowType>
+void agg_update_row_with_dependence_column(const std::vector<uint32_t>& cids, DstRowType* dst, const SrcRowType& src, uint32_t dependence_cid) {
+    for (auto cid : cids) {
+        auto dst_cell = dst->cell(cid);
+        auto src_cell = src.cell(cid);
+        if (dst->schema_column(cid)->aggregation() == OLAP_FIELD_AGGREGATION_REPLACE) {
+            auto dst_dependence_cell = dst->cell(dependence_cid);
+            auto src_dependence_cell = src.cell(dependence_cid);
+            LOG(INFO) << "dst_dependence_cell " << dst->cell(dependence_cid).is_null() ? "NULL" : dst->schma_column(cid)->to_string(dst->cell_ptr(dependence_cid));
+            LOG(INFO) << "src_dependence_cell " << src.cell(dependence_cid).is_null() ? "NULL" : src.schma_column(cid)->to_string(src.cell_ptr(dependence_cid));
+            if (dst->column_schema(dependence_cid)->compare_cell(dst_dependence_cell, src_dependence_cell)) {
+                LOG(INFO) << "src version little than dst version";
+                return;
+            } else {
+                dst->schema()->column(cid)->agg_update(&dst_cell, src_cell);
+            }
+        } else {
+            dst->schema()->column(cid)->agg_update(&dst_cell, src_cell);
+        }
+    }
+}
+
 template<typename RowType>
 void agg_finalize_row(RowType* row, MemPool* mem_pool) {
     for (uint32_t cid = row->schema()->num_key_columns(); cid < row->schema()->num_columns(); ++cid) {

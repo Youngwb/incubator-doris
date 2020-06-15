@@ -333,14 +333,18 @@ OLAPStatus Reader::init(const ReaderParams& read_params) {
 
     LOG(INFO) << "Reader init Finished.";
     LOG(INFO) << "return columns : ";
+    std::stringstream s1;
     for (auto& i : _return_columns) {
-        LOG(INFO) << _tablet->tablet_schema().column(i).name() << ", ";
+         s1 << _tablet->tablet_schema().column(i).name() << ", ";
     }
+    LOG(INFO) << s1.str();
 
     LOG(INFO) << "seek columns : ";
+    std::stringstream s2;
     for (auto& i : _seek_columns) {
-        LOG(INFO) << _tablet->tablet_schema().column(i).name() << ", ";
+        s2 << _tablet->tablet_schema().column(i).name() << ", ";
     }
+    LOG(INFO) << s2.str();
 
     LOG(INFO) << "key params : " << _keys_param.to_string();
 
@@ -389,7 +393,11 @@ OLAPStatus Reader::_agg_key_next_row(RowCursor* row_cursor, MemPool* mem_pool, O
         if (!equal_row(_key_cids, *row_cursor, *_next_key)) {
             break;
         }
-        agg_update_row(_value_cids, row_cursor, *_next_key);
+        if (!_has_dependence_column) {
+            agg_update_row(_value_cids, row_cursor, *_next_key);
+        } else {
+            agg_update_row_with_dependence_column(_value_cids, row_cursor, *_next_key, _dependence_column);
+        }
         ++merged_count;
     } while (true);
     _merged_rows += merged_count;
@@ -616,32 +624,23 @@ OLAPStatus Reader::_init_return_columns(const ReaderParams& read_params) {
             }
         }
 
-        // replace value column has version dependence column
-        bool has_dependence_column = false;
-        int32_t depen_column_index = -1;
-        for (auto id : read_params.return_columns) {
-            if(_tablet->tablet_schema().column(id).has_dependence_column()) {
-                std::string depen_column = _tablet->tablet_schema().column(id).dependence_column();
-                depen_column_index = _tablet->field_index(depen_column);
-                if (depen_column_index < 0) {
-                    std::stringstream ss;
-                    ss << "field name is invalied. field="  << depen_column;
-                    LOG(WARNING) << ss.str();
-                    return OLAP_ERR_READER_INITIALIZED_ERROR;
-                }
-                has_dependence_column = true;
-                break;
-            }
-        }
-        if (has_dependence_column) {
-            _return_columns.push_back(depen_column_index);
-        }
-
         for (auto id : read_params.return_columns) {
             if (_tablet->tablet_schema().column(id).is_key()) {
                 _key_cids.push_back(id);
             } else {
                 _value_cids.push_back(id);
+            }
+
+            if (_tablet->tablet_schema().column(id).has_dependence_column()) {
+                std::string col_name = _tablet->tablet_schema().column(id).dependence_column();
+                _has_dependence_column = true;
+                _dependence_column = _tablet->field_index(col_name);
+                if (_dependence_column < 0) {
+                    std::stringstream ss;
+                    ss << "field name is invalied. field="  << col_name;
+                    LOG(WARNING) << ss.str();
+                    return OLAP_ERR_READER_INIT_ERROR;
+                }
             }
         }
     } else if (read_params.return_columns.empty()) {

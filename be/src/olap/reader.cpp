@@ -373,7 +373,6 @@ OLAPStatus Reader::_agg_key_next_row(RowCursor* row_cursor, MemPool* mem_pool, O
     }
     init_row_with_others(row_cursor, *_next_key, mem_pool, agg_pool);
     LOG(INFO) << "init with next_key, row_cursor : " << row_cursor->to_string();
-    LOG(INFO) << "init with next_key, next_key : " << _next_key->to_string();
     int64_t merged_count = 0;
     do {
         auto res = _collect_iter->next(&_next_key, &_next_delete_flag);
@@ -385,6 +384,7 @@ OLAPStatus Reader::_agg_key_next_row(RowCursor* row_cursor, MemPool* mem_pool, O
             break;
         }
 
+        LOG(INFO) << "next_key : " << _next_key->to_string();
         if (_aggregation && merged_count > config::doris_scanner_row_num) {
             break;
         }
@@ -639,7 +639,7 @@ OLAPStatus Reader::_init_return_columns(const ReaderParams& read_params) {
                     std::stringstream ss;
                     ss << "field name is invalied. field="  << col_name;
                     LOG(WARNING) << ss.str();
-                    return OLAP_ERR_READER_INIT_ERROR;
+                    return OLAP_ERR_READER_INITIALIZED_ERROR;
                 }
             }
         }

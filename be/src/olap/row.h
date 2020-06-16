@@ -173,14 +173,14 @@ void agg_update_row_with_dependence_column(const std::vector<uint32_t>& cids, Ds
     for (auto cid : cids) {
         auto dst_cell = dst->cell(cid);
         auto src_cell = src.cell(cid);
-        if (dst->schema_column(cid)->aggregation() == OLAP_FIELD_AGGREGATION_REPLACE) {
+        if (dst->column_schema(cid)->aggregation() == OLAP_FIELD_AGGREGATION_REPLACE) {
             auto dst_dependence_cell = dst->cell(dependence_cid);
             auto src_dependence_cell = src.cell(dependence_cid);
-            LOG(INFO) << "dst_dependence_cell " << dst->cell(dependence_cid).is_null() ? "NULL" : dst->schma_column(cid)->to_string(dst->cell_ptr(dependence_cid));
-            LOG(INFO) << "src_dependence_cell " << src.cell(dependence_cid).is_null() ? "NULL" : src.schma_column(cid)->to_string(src.cell_ptr(dependence_cid));
-            if (dst->column_schema(dependence_cid)->compare_cell(dst_dependence_cell, src_dependence_cell)) {
+            LOG(INFO) << "dst_dependence_cell " << dst->column_schema(dependence_cid)->debug_string(dst_dependence_cell);
+            LOG(INFO) << "src_dependence_cell " << src.column_schema(dependence_cid)->debug_string(src_dependence_cell);
+            if (dst->column_schema(dependence_cid)->compare_cell(dst_dependence_cell, src_dependence_cell) > 0) {
                 LOG(INFO) << "src version little than dst version";
-                return;
+                continue;
             } else {
                 dst->schema()->column(cid)->agg_update(&dst_cell, src_cell);
             }

@@ -623,6 +623,13 @@ OLAPStatus Reader::_init_return_columns(const ReaderParams& read_params) {
                 }
             }
         }
+        for (auto id : read_params.return_columns) {
+            if (_tablet->tablet_schema().column(id).is_key()) {
+                _key_cids.push_back(id);
+            } else {
+                _value_cids.push_back(id);
+            }
+        }
     } else if (read_params.return_columns.empty()) {
         for (size_t i = 0; i < _tablet->tablet_schema().num_columns(); ++i) {
             _return_columns.push_back(i);
@@ -647,21 +654,15 @@ OLAPStatus Reader::_init_return_columns(const ReaderParams& read_params) {
                          read_params.reader_type, read_params.return_columns.size());
         return OLAP_ERR_INPUT_PARAMETER_ERROR;
     }
-        
-    for (auto id : read_params.return_columns) {
-        if (_tablet->tablet_schema().column(id).is_key()) {
-            _key_cids.push_back(id);
-        } else {
-            _value_cids.push_back(id);
-        }
 
+    for (auto id : _return_columns) {
         if (_tablet->tablet_schema().column(id).has_dependence_column()) {
             std::string col_name = _tablet->tablet_schema().column(id).dependence_column();
             _has_dependence_column = true;
             _dependence_column = _tablet->field_index(col_name);
             if (_dependence_column < 0) {
                 std::stringstream ss;
-                ss << "field name is invalied. field="  << col_name;
+                ss << "field name is invalied. field=" << col_name;
                 LOG(WARNING) << ss.str();
                 return OLAP_ERR_READER_INITIALIZED_ERROR;
             }

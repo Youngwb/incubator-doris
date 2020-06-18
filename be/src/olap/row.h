@@ -161,12 +161,12 @@ void agg_update_row_with_replace_version_column(DstRowType* dst, const SrcRowTyp
     for (uint32_t cid = dst->schema()->num_key_columns(); cid < dst->schema()->num_columns(); ++cid) {
         auto dst_cell = dst->cell(cid);
         auto src_cell = src.cell(cid);
-        if (dst->column_schema(cid)->aggregation() == OLAP_FIELD_AGGREGATION_REPLACE) {
+        if (dst->schema()->column(cid)->aggregation() == OLAP_FIELD_AGGREGATION_REPLACE) {
             auto dst_dependence_cell = dst->cell(replace_version_cid);
             auto src_dependence_cell = src.cell(replace_version_cid);
-            LOG(INFO) << "dst_dependence_cell " << dst->column_schema(replace_version_cid)->debug_string(dst_dependence_cell);
-            LOG(INFO) << "src_dependence_cell " << src.column_schema(replace_version_cid)->debug_string(src_dependence_cell);
-            if (dst->column_schema(replace_version_cid)->compare_cell(dst_dependence_cell, src_dependence_cell) > 0) {
+            LOG(INFO) << "dst_dependence_cell " << dst->schema()->column(replace_version_cid)->debug_string(dst_dependence_cell);
+            LOG(INFO) << "src_dependence_cell " << src.schema()->column(replace_version_cid)->debug_string(src_dependence_cell);
+            if (dst->schema()->column(replace_version_cid)->compare_cell(dst_dependence_cell, src_dependence_cell) > 0) {
                 LOG(INFO) << "src version little than dst version";
                 continue;
             } else {
@@ -174,7 +174,7 @@ void agg_update_row_with_replace_version_column(DstRowType* dst, const SrcRowTyp
             }
         } else {
             dst->schema()->column(cid)->agg_update(&dst_cell, src_cell, mem_pool);
-        };
+        }
 
     }
 }
@@ -196,12 +196,12 @@ void agg_update_row_with_replace_version_column(const std::vector<uint32_t>& cid
     for (auto cid : cids) {
         auto dst_cell = dst->cell(cid);
         auto src_cell = src.cell(cid);
-        if (dst->column_schema(cid)->aggregation() == OLAP_FIELD_AGGREGATION_REPLACE) {
+        if (dst->schema()->column(cid)->aggregation() == OLAP_FIELD_AGGREGATION_REPLACE) {
             auto dst_dependence_cell = dst->cell(replace_version_cid);
             auto src_dependence_cell = src.cell(replace_version_cid);
-            LOG(INFO) << "dst_dependence_cell " << dst->column_schema(replace_version_cid)->debug_string(dst_dependence_cell);
-            LOG(INFO) << "src_dependence_cell " << src.column_schema(replace_version_cid)->debug_string(src_dependence_cell);
-            if (dst->column_schema(replace_version_cid)->compare_cell(dst_dependence_cell, src_dependence_cell) > 0) {
+            LOG(INFO) << "dst_dependence_cell " << dst->schema()->column(replace_version_cid)->debug_string(dst_dependence_cell);
+            LOG(INFO) << "src_dependence_cell " << src.schema()->column(replace_version_cid)->debug_string(src_dependence_cell);
+            if (dst->schema()->column(replace_version_cid)->compare_cell(dst_dependence_cell, src_dependence_cell) > 0) {
                 LOG(INFO) << "src version little than dst version";
                 continue;
             } else {

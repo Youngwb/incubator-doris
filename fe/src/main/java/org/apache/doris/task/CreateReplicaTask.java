@@ -18,7 +18,6 @@
 package org.apache.doris.task;
 
 import org.apache.doris.alter.SchemaChangeHandler;
-import org.apache.doris.catalog.AggregateType;
 import org.apache.doris.catalog.Column;
 import org.apache.doris.catalog.Index;
 import org.apache.doris.catalog.KeysType;

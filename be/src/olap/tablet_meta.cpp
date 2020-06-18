@@ -158,10 +158,6 @@ TabletMeta::TabletMeta(int64_t table_id, int64_t partition_id,
             column->set_is_bf_column(tcolumn.is_bloom_filter_column);
             has_bf_columns = true;
         }
-        if (tcolumn.__isset.dependence_column) {
-            LOG(INFO) << "column set dependence column : " << tcolumn.dependence_column;
-            column->set_dependence_column(tcolumn.dependence_column);
-        }
         if (tablet_schema.__isset.indexes) {
             for (auto& index : tablet_schema.indexes) {
                 if (index.index_type == TIndexType::type::BITMAP) {
@@ -182,6 +178,10 @@ TabletMeta::TabletMeta(int64_t table_id, int64_t partition_id,
 
     if (tablet_schema.__isset.is_in_memory) {
         schema->set_is_in_memory(tablet_schema.is_in_memory);
+    }
+
+    if (tablet_schema.__isset.replace_version_column) {
+        schema->set_replace_version_column(tablet_schema.replace_version_column);
     }
 
     init_from_pb(tablet_meta_pb);

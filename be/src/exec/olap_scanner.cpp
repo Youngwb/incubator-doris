@@ -214,8 +214,6 @@ Status OlapScanner::_init_params(
 }
 
 Status OlapScanner::_init_return_columns() {
-    bool has_dependence_column = false;
-    int32_t dependence_column_index = -1;
     for (auto slot : _tuple_desc->slots()) {
         if (!slot->is_materialized()) {
             continue;
@@ -227,22 +225,34 @@ Status OlapScanner::_init_return_columns() {
             LOG(WARNING) << ss.str();
             return Status::InternalError(ss.str());
         }
-        const TabletColumn& column = _tablet->tablet_schema().column(index);
-        if (column.has_dependence_column()) {
-            has_dependence_column = true;
-            dependence_column_index = _tablet->field_index(column.dependence_column());
-            if (dependence_column_index < 0) {
-                std::stringstream ss;
-                ss << "field name is invalied. field="  << column.dependence_column();
-                LOG(WARNING) << ss.str();
-                return Status::InternalError(ss.str());
-            }
-        }
         _return_columns.push_back(index);
         _query_slots.push_back(slot);
     }
-    if (has_dependence_column && dependence_column_index != -1) {
-        _return_columns.push_back(dependence_column_index);
+
+    if (_tablet->tablet_schema().has_replace_version_column()) {
+        // check replace version column
+        int32_t replace_version_index = _tablet->field_index(_tablet->tablet_schema().replace_version_column());
+        if (replace_version_index < 0) {
+            std::stringstream ss;
+            ss << "field name is invalied. field="  << _tablet->tablet_schema().replace_version_column();
+            LOG(WARNING) << ss.str();
+            return Status::InternalError(ss.str());
+        }
+        bool is_replace_version_column_exist = false;
+        bool has_replace_column =false;
+        for (auto index : _return_columns) {
+            if (index == replace_version_index) {
+                is_replace_version_column_exist = true;
+                LOG(INFO) << "replace version already exist, no need to expand";
+                break;
+            }
+            if (_tablet->tablet_schema().column(index).aggregation() == FieldAggregationMethod::OLAP_FIELD_AGGREGATION_REPLACE) {
+                has_replace_column = true;
+            }
+        }
+        if (!is_replace_version_column_exist && has_replace_column) {
+            _return_columns.push_back(replace_version_index);
+        }
     }
 
     if (_return_columns.empty()) {

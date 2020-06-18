@@ -249,7 +249,6 @@ message ColumnPB {
     optional int32 referenced_column_id = 13; //   
     optional string referenced_column = 14; // ColumnMessage.referenced_column?
     optional bool has_bitmap_index = 15 [default=false]; // ColumnMessage.has_bitmap_index
-    optional string dependence_column = 16;
 }
 
 message TabletSchemaPB {
@@ -261,6 +260,7 @@ message TabletSchemaPB {
     optional double bf_fpp = 6; // OLAPHeaderMessage.bf_fpp
     optional uint32 next_column_unique_id = 7; // OLAPHeaderMessage.next_column_unique_id
     optional bool is_in_memory = 8 [default=false];
+    optional string replace_version_column = 16;
 }
 
 enum TabletStatePB {

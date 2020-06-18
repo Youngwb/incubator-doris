@@ -232,8 +232,8 @@ private:
     uint64_t _merged_rows = 0;
     OlapReaderStatistics _stats;
     // for replace version column
-    bool _has_dependence_column = false;
-    uint32_t _dependence_column = -1;
+    bool _need_replace_by_version = false;
+    int32_t _replace_version_column = -1;
 
     DISALLOW_COPY_AND_ASSIGN(Reader);
 };

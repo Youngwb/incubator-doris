@@ -168,11 +168,6 @@ public class CreateReplicaTask extends AgentTask {
             if (bfColumns != null && bfColumns.contains(column.getName())) {
                 tColumn.setIs_bloom_filter_column(true);
             }
-            // set replace version column for value column which AggregateType is REPLACE
-            if (replaceVersionColumn != null && column.getAggregationType() == AggregateType.REPLACE
-                    && !column.getName().equalsIgnoreCase(replaceVersionColumn)) {
-                tColumn.setDependence_column(replaceVersionColumn);
-            }
             // when doing schema change, some modified column has a prefix in name.
             // this prefix is only used in FE, not visible to BE, so we should remove this prefix.
             if(column.getName().startsWith(SchemaChangeHandler.SHADOW_NAME_PRFIX)) {
@@ -193,6 +188,9 @@ public class CreateReplicaTask extends AgentTask {
 
         if (bfColumns != null) {
             tSchema.setBloom_filter_fpp(bfFpp);
+        }
+        if (replaceVersionColumn != null) {
+            tSchema.setReplace_version_column(replaceVersionColumn);
         }
         tSchema.setIs_in_memory(isInMemory);
         createTabletReq.setTablet_schema(tSchema);

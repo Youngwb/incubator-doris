@@ -109,7 +109,12 @@ void MemTable::_tuple_to_row(const Tuple* tuple, ContiguousRow* row, MemPool* me
 
 void MemTable::_aggregate_two_row(const ContiguousRow& src_row, TableKey row_in_skiplist) {
     ContiguousRow dst_row(_schema, row_in_skiplist);
-    agg_update_row(&dst_row, src_row, _table_mem_pool.get());
+    if (_tablet_schema->has_replace_version_column()) {
+        uint32_t replace_version_index = _tablet_schema->field_index(_tablet_schema->replace_version_column());
+        agg_update_row_with_replace_version_column(&dst_row, src_row, replace_version_index, _table_mem_pool.get());
+    } else {
+        agg_update_row(&dst_row, src_row, _table_mem_pool.get());
+    }
 }
 
 OLAPStatus MemTable::flush() {

@@ -41,8 +41,6 @@ public:
     inline bool is_nullable() const { return _is_nullable; }
     inline bool is_bf_column() const { return _is_bf_column; }
     inline bool has_bitmap_index() const {return _has_bitmap_index; }
-    inline bool has_dependence_column() const { return  _has_dependence_column; }
-    std::string dependence_column() const { return _dependence_column; }
     bool has_default_value() const { return _has_default_value; }
     std::string default_value() const { return _default_value; }
     bool has_reference_column() const { return _has_referenced_column; }
@@ -88,9 +86,6 @@ private:
     std::string _referenced_column;
 
     bool _has_bitmap_index = false;
-
-    bool _has_dependence_column = false;
-    std::string _dependence_column;
 };
 
 bool operator==(const TabletColumn& a, const TabletColumn& b);
@@ -118,6 +113,8 @@ public:
     inline void set_is_in_memory (bool is_in_memory) {
         _is_in_memory = is_in_memory;
     }
+    inline bool has_replace_version_column() const { return _has_replace_version_column; }
+    inline std::string replace_version_column() const { return _replace_version_column; }
 
 private:
     friend bool operator==(const TabletSchema& a, const TabletSchema& b);
@@ -137,6 +134,9 @@ private:
     bool _has_bf_fpp = false;
     double _bf_fpp = 0;
     bool _is_in_memory = false;
+
+    bool _has_replace_version_column = false;
+    std::string _replace_version_column;
 };
 
 bool operator==(const TabletSchema& a, const TabletSchema& b);

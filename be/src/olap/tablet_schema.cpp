@@ -302,10 +302,6 @@ void TabletColumn::init_from_pb(const ColumnPB& column) {
         _has_bitmap_index = false;
     }
 
-    _has_dependence_column = column.has_dependence_column();
-    if (_has_dependence_column) {
-        _dependence_column = column.dependence_column();
-    }
     _has_referenced_column = column.has_referenced_column_id();
     if (_has_referenced_column) {
         _referenced_column_id = column.referenced_column_id();
@@ -340,9 +336,6 @@ void TabletColumn::to_schema_pb(ColumnPB* column) {
     if (_has_bitmap_index) {
         column->set_has_bitmap_index(_has_bitmap_index);
     }
-    if (_has_dependence_column) {
-        column->set_dependence_column(_dependence_column);
-    }
 }
 
 void TabletSchema::init_from_pb(const TabletSchemaPB& schema) {
@@ -374,6 +367,11 @@ void TabletSchema::init_from_pb(const TabletSchemaPB& schema) {
         _has_bf_fpp = false;
         _bf_fpp = BLOOM_FILTER_DEFAULT_FPP;
     }
+
+    _has_replace_version_column = schema.has_replace_version_column();
+    if (_has_replace_version_column) {
+        _replace_version_column = schema.replace_version_column();
+    }
     _is_in_memory = schema.is_in_memory();
 }
 
@@ -388,6 +386,9 @@ void TabletSchema::to_schema_pb(TabletSchemaPB* tablet_meta_pb) {
     tablet_meta_pb->set_compress_kind(_compress_kind);
     if (_has_bf_fpp) {
         tablet_meta_pb->set_bf_fpp(_bf_fpp);
+    }
+    if (_has_replace_version_column) {
+        tablet_meta_pb->set_replace_version_column(_replace_version_column);
     }
     tablet_meta_pb->set_next_column_unique_id(_next_column_unique_id);
     tablet_meta_pb->set_is_in_memory(_is_in_memory);

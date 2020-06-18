@@ -393,10 +393,10 @@ OLAPStatus Reader::_agg_key_next_row(RowCursor* row_cursor, MemPool* mem_pool, O
         if (!equal_row(_key_cids, *row_cursor, *_next_key)) {
             break;
         }
-        if (!_has_dependence_column) {
+        if (!_need_replace_by_version) {
             agg_update_row(_value_cids, row_cursor, *_next_key);
         } else {
-            agg_update_row_with_dependence_column(_value_cids, row_cursor, *_next_key, _dependence_column);
+            agg_update_row_with_replace_version_column(_value_cids, row_cursor, *_next_key, _replace_version_column);
         }
         ++merged_count;
     } while (true);
@@ -655,19 +655,23 @@ OLAPStatus Reader::_init_return_columns(const ReaderParams& read_params) {
         return OLAP_ERR_INPUT_PARAMETER_ERROR;
     }
 
-    for (auto id : _return_columns) {
-        if (_tablet->tablet_schema().column(id).has_dependence_column()) {
-            std::string col_name = _tablet->tablet_schema().column(id).dependence_column();
-            _has_dependence_column = true;
-            _dependence_column = _tablet->field_index(col_name);
-            if (_dependence_column < 0) {
-                std::stringstream ss;
-                ss << "field name is invalied. field=" << col_name;
-                LOG(WARNING) << ss.str();
-                return OLAP_ERR_READER_INITIALIZED_ERROR;
+    if (_tablet->tablet_schema().has_replace_version_column()) {
+        for (auto id : _return_columns) {
+            if (_tablet->tablet_schema().column(id).aggregation() == FieldAggregationMethod::OLAP_FIELD_AGGREGATION_REPLACE) {
+                std::string col_name = _tablet->tablet_schema().replace_version_column();
+                _need_replace_by_version = true;
+                _replace_version_column = _tablet->field_index(col_name);
+                if (_replace_version_column < 0) {
+                    std::stringstream ss;
+                    ss << "field name is invalied. field=" << col_name;
+                    LOG(WARNING) << ss.str();
+                    return OLAP_ERR_READER_INITIALIZED_ERROR;
+                }
+                break;
             }
         }
     }
+
 
     std::sort(_key_cids.begin(), _key_cids.end(), std::greater<uint32_t>());
 

@@ -728,13 +728,6 @@ public class OlapTable extends Table {
     }
 
     public void setReplaceVersionInfo(String replaceVersionColumn) {
-        for (MaterializedIndexMeta index : indexIdToMeta.values()) {
-            for (Column column : index.getSchema()) {
-                if (column.getName().equalsIgnoreCase(replaceVersionColumn)) {
-                    column.setAggregationType(AggregateType.MAX, false);
-                }
-            }
-        }
         this.replaceVersionColumn = replaceVersionColumn;
     }
 
@@ -957,6 +950,13 @@ public class OlapTable extends Table {
         }
 
         tempPartitions.write(out);
+        // replace version column
+        if (replaceVersionColumn != null) {
+            out.writeBoolean(true);
+            Text.writeString(out, replaceVersionColumn);
+        } else {
+            out.writeBoolean(false);
+        }
     }
 
     @Override
@@ -1094,6 +1094,12 @@ public class OlapTable extends Table {
                     }
                 }
                 tempPartitions.unsetPartitionInfo();
+            }
+        }
+
+        if (Catalog.getCurrentCatalogJournalVersion() >= FeMetaVersion.VERSION_86) {
+            if (in.readBoolean()) {
+                replaceVersionColumn = Text.readString(in);
             }
         }
 

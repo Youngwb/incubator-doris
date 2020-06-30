@@ -504,6 +504,8 @@ public class MaterializedViewHandler extends AlterHandler {
         // a. all columns should exist in base rollup schema
         // b. value after key
         // c. if rollup contains REPLACE column, all keys on base index should be included.
+        // d. if base index has replace version column and rollup has REPLACE column, replace version
+        //    column should be included.
         List<Column> rollupSchema = new ArrayList<Column>();
         // check (a)(b)
         boolean meetValue = false;
@@ -549,6 +551,19 @@ public class MaterializedViewHandler extends AlterHandler {
                     } else {
                         throw new DdlException("Rollup should contains all keys if there is a REPLACE value");
                     }
+                }
+            }
+
+            if (meetReplaceValue && olapTable.getReplaceVersionColumn() != null) {
+                boolean found = false;
+                for (String colName : rollupColumnNames) {
+                    if (colName.equalsIgnoreCase(olapTable.getReplaceVersionColumn())) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new DdlException("Rollup should contains replace version column if rollup has REPLACE value");
                 }
             }
         } else if (KeysType.DUP_KEYS == keysType) {

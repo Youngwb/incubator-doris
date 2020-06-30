@@ -21,6 +21,8 @@ import org.apache.doris.analysis.DateLiteral;
 import org.apache.doris.catalog.AggregateType;
 import org.apache.doris.catalog.Column;
 import org.apache.doris.catalog.DataProperty;
+import org.apache.doris.catalog.KeysType;
+import org.apache.doris.catalog.MaterializedIndexMeta;
 import org.apache.doris.catalog.Partition;
 import org.apache.doris.catalog.PrimitiveType;
 import org.apache.doris.catalog.Type;
@@ -39,6 +41,7 @@ import org.apache.doris.thrift.TTabletType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -370,27 +373,35 @@ public class PropertyAnalyzer {
         return bfFpp;
     }
 
-    public static String analyzeReplaceVersionColumn(Map<String, String> properties, List<Column> columns)
+    public static String analyzeReplaceVersionColumn(Map<String, String> properties, Collection<MaterializedIndexMeta> indexMetas)
             throws AnalysisException {
         String replaceVersionColumn = null;
         if (properties != null && properties.containsKey(PROPERTIES_REPLACE_VERSION_COLUMN)) {
             replaceVersionColumn = properties.get(PROPERTIES_REPLACE_VERSION_COLUMN).trim();
-            boolean found = false;
-            for (Column column : columns) {
-                if (column.getName().equalsIgnoreCase(replaceVersionColumn)) {
-                    if (column.isKey() || column.getAggregationType() !=  AggregateType.REPLACE) {
-                        throw new AnalysisException("Replace version column should be used in value column of "
-                                + "AGG_KEYS table, and aggregate type should be REPLACE");
+
+            for (MaterializedIndexMeta indexMeta : indexMetas) {
+                if (indexMeta.getKeysType() != KeysType.AGG_KEYS) {
+                    throw new AnalysisException("Replace version column should be used in AGG_KEYS table");
+                }
+                boolean found = false;
+                boolean hasReplaceColumn = false;
+                List<Column> columns = indexMeta.getSchema();
+                for (Column column : columns) {
+                    if (column.getName().equalsIgnoreCase(replaceVersionColumn)) {
+                        if (column.isKey() || column.getAggregationType() != AggregateType.MAX) {
+                            throw new AnalysisException("Replace version column should be used in value column of "
+                                    + "AGG_KEYS table, and aggregate type should be MAX");
+                        }
+                        found = true;
+                    } else if (column.getAggregationType() == AggregateType.REPLACE) {
+                        hasReplaceColumn = true;
                     }
-                    found = true;
+                }
+                if (!found && hasReplaceColumn) {
+                    throw new AnalysisException("replace version column : " + replaceVersionColumn  +
+                            " does not exist in table or materialized index.");
                 }
             }
-
-            if (!found) {
-                throw new AnalysisException("replace version column does not exist in table. invalid column: "
-                        + replaceVersionColumn);
-            }
-
             properties.remove(PROPERTIES_REPLACE_VERSION_COLUMN);
         }
 

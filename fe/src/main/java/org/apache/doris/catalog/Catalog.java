@@ -3743,8 +3743,7 @@ public class Catalog {
         try {
             boolean isReplaceVersionColumnSet = properties != null && properties.containsKey(PropertyAnalyzer.PROPERTIES_REPLACE_VERSION_COLUMN);
             if (isReplaceVersionColumnSet) {
-                replaceVersionColumn = PropertyAnalyzer.analyzeReplaceVersionColumn(properties, baseSchema);
-
+                replaceVersionColumn = PropertyAnalyzer.analyzeReplaceVersionColumn(properties, olapTable.getCopiedIndexIdToMeta().values());
                 olapTable.setReplaceVersionInfo(replaceVersionColumn);
             }
         } catch (AnalysisException e) {
